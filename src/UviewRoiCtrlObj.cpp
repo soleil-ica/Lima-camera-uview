@@ -21,7 +21,7 @@
 //############################################################################
 
 #include "UviewCamera.h"
-#include "UviewRoiCtrlObj.h
+#include "UviewRoiCtrlObj.h"
 
 using namespace lima;
 using namespace lima::Uview;
