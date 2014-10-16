@@ -27,6 +27,7 @@
 #define _WIN32_DCOM
 #include <yat/utils/XString.h>
 
+//#import "imageac.tlb" named_guids no_namespace
 #import "..\lib\imageac.tlb" named_guids no_namespace
 
 

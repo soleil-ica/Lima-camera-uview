@@ -21,19 +21,11 @@
 //############################################################################
 
 #include <cstdlib>
-
-#if ! defined (WIN32)
-#  include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h> 
-# include <netdb.h>
-#else
-# include <winsock2.h>
+#include <winsock2.h>
 #include <unistd.h>
-#endif
-
 
 #include "UviewCamera.h"
+
 const int compression = 0;
 using namespace lima;
 using namespace lima::Uview;
