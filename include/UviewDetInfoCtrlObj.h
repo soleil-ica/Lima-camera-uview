@@ -24,8 +24,8 @@
 
 #include "UviewCompatibility.h"
 
-#include "Debug.h"
-#include "HwDetInfoCtrlObj.h"
+#include "lima/Debug.h"
+#include "lima/HwDetInfoCtrlObj.h"
 #include "UviewCamera.h"
 
 

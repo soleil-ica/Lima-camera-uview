@@ -22,11 +22,11 @@
 #ifndef UVIEWCAMERA_H
 #define UVIEWCAMERA_H
 
-#include "Debug.h"
-#include "Constants.h"
-#include "HwBufferMgr.h"
-#include "ThreadUtils.h"
-#include "Exceptions.h"
+#include "lima/Debug.h"
+#include "lima/Constants.h"
+#include "lima/HwBufferMgr.h"
+#include "lima/ThreadUtils.h"
+#include "lima/Exceptions.h"
 #include "UviewSendReceive.h"
 #include "UviewCompatibility.h"
 
