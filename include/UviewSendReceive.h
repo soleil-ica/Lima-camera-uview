@@ -63,6 +63,8 @@ public:
 	short GetImageWidth();
 
 	short GetImageHeight();
+	
+	bool GetAcquisitionInProgress();
 
     //SETS AND GET X/Y ROI MIN AND MAX
     short GetCameraROIxMin();
@@ -80,6 +82,12 @@ public:
     short GetCameraROIyMax();
 
     void SetCameraROIyMax(short value);
+
+	/// -- FOR TEST --//
+
+	void setCameraRoi(short originX, short originY, short limit_x, short limit_y);
+
+	void setCameraBin(short sethBin, short setvBin);
 
     //SETS AND GET BINNING VERTICAL/HORIZONTAL
     short GetCameraHBin();
@@ -103,6 +111,8 @@ public:
     short GetCamImageSize(long *width, long *height);
 
 	float GetVersion();
+	
+	void SetSequential(bool mode);
 
     // AVERAGE IMAGES
 
