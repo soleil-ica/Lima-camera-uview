@@ -106,7 +106,6 @@ long UviewSendReceive::AcquireSingleImage(int imageId)
 	HRESULT hr=CoCreateInstance (CLSID_UViewInt, NULL, CLSCTX_LOCAL_SERVER,DIID_IUViewInt , (void**)&UView);		 		 
 	//SENDING COMMAND
 	response = UView->AcquireSingleImage(imageId);
-	UView->ExportImageAs();
 	//UNINITIALIZE INSTANCE
 	CoUninitialize();
 	return response;
@@ -399,6 +398,27 @@ void UviewSendReceive::SetCameraROIyMax(short value)
 }
 //+------------------------------------------------------------------
 /**
+ *	method:setCameraRoi
+ */
+//+------------------------------------------------------------------
+void UviewSendReceive::setCameraRoi(short originX, short originY, short limit_x, short limit_y)
+{
+	//INITIALISE COM 
+	CoInitialize(NULL);
+	// CREATE COM POINTER
+	IUViewInt *UView;
+	//INITIALIZE INSTANCE
+	HRESULT hr=CoCreateInstance (CLSID_UViewInt, NULL, CLSCTX_LOCAL_SERVER,DIID_IUViewInt , (void**)&UView);		 		 
+	//SENDING COMMAND
+    UView->CameraROIxMin = originX;
+	UView->CameraROIyMin = originY;
+    UView->CameraROIyMax = limit_y;
+	UView->CameraROIxMax = limit_x;
+	//UNINITIALIZE INSTANCE
+	CoUninitialize();
+}
+//+------------------------------------------------------------------
+/**
  *	method:GetCameraHBin
  */
 //+------------------------------------------------------------------
@@ -474,6 +494,25 @@ void UviewSendReceive::SetCameraVBin(short value)
 	HRESULT hr=CoCreateInstance (CLSID_UViewInt, NULL, CLSCTX_LOCAL_SERVER,DIID_IUViewInt , (void**)&UView);		 		 
 	//SENDING COMMAND
     UView->CameraVBin = value;
+	//UNINITIALIZE INSTANCE
+	CoUninitialize();
+}
+//+------------------------------------------------------------------
+/**
+ *	method:SetCameraVBin
+ */
+//+------------------------------------------------------------------
+void UviewSendReceive::setCameraBin(short sethBin, short setvBin)
+{
+	 //INITIALISE COM 
+	CoInitialize(NULL);
+	// CREATE COM POINTER
+	IUViewInt *UView;
+	//INITIALIZE INSTANCE
+	HRESULT hr=CoCreateInstance (CLSID_UViewInt, NULL, CLSCTX_LOCAL_SERVER,DIID_IUViewInt , (void**)&UView);		 		 
+	//SENDING COMMAND
+    UView->CameraVBin = setvBin;
+	UView->CameraHBin = sethBin;
 	//UNINITIALIZE INSTANCE
 	CoUninitialize();
 }
@@ -766,3 +805,44 @@ float UviewSendReceive::GetVersion()
 	CoUninitialize();*/
 	return 1;
 }
+//+------------------------------------------------------------------
+/**
+ *	method:GetAcquisitionInProgress
+ */
+//+------------------------------------------------------------------
+bool UviewSendReceive:: GetAcquisitionInProgress()
+{
+bool response = 0;
+	
+	//INITIALISE COM 
+	CoInitialize(NULL);
+	// CREATE COM POINTER
+	IUViewInt *UView;
+	//INITIALIZE INSTANCE
+	HRESULT hr=CoCreateInstance (CLSID_UViewInt, NULL, CLSCTX_LOCAL_SERVER,DIID_IUViewInt , (void**)&UView);		 		 
+	//SENDING COMMAND
+    response = UView->GetAcquisitionInProgress();
+	//UNINITIALIZE INSTANCE
+	CoUninitialize();
+	return response;
+
+}
+//+------------------------------------------------------------------
+/**
+ *	method:AverageImages
+ */
+//+------------------------------------------------------------------
+void UviewSendReceive::SetSequential(bool mode)
+{
+    //INITIALISE COM 
+	CoInitialize(NULL);
+	// CREATE COM POINTER
+	IUViewInt *UView;
+	//INITIALIZE INSTANCE
+	HRESULT hr=CoCreateInstance (CLSID_UViewInt, NULL, CLSCTX_LOCAL_SERVER,DIID_IUViewInt , (void**)&UView);		 		 
+	//SENDING COMMAND
+    UView->Sequential = mode;
+	//UNINITIALIZE INSTANCE
+	CoUninitialize();
+}
+

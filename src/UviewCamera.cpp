@@ -34,8 +34,9 @@ const short ROIid1 = 1;
 const short ROIid2 = 2;
 const short ROIid3 = 3;
 const short ROIid4 = 4;
-const short ROIid5 = 5;
 
+const int collectInCurrentWindow = 1;
+const bool simultaneouslyMode = true;
 //---------------------------------------------------------------------------------------
 //! Camera::CameraThread::CameraThread()
 //---------------------------------------------------------------------------------------
@@ -106,7 +107,7 @@ void Camera::CameraThread::execCmd(int cmd)
 void Camera::CameraThread::execStartAcq()
 {
 	DEB_MEMBER_FUNCT();
-	//DEB_TRACE()<<"CameraThread::execStartAcq - BEGIN";
+	DEB_TRACE()<<"CameraThread::execStartAcq - BEGIN";
 	
 	int status;
 	int acq_frame_nb;
@@ -129,42 +130,45 @@ void Camera::CameraThread::execStartAcq()
         VARIANT idata;
         VariantInit(&idata);
         VariantClear(&idata);
-        //--Get image size--//
-        int is_image_ready = m_cam->_uViewCom->GetNewImageReady();
+        //--Ask for new Image--//
+        m_cam->_uViewCom->AcquireSingleImage(collectInCurrentWindow);
         //--If new Image is ready, get data--//
-        if(is_image_ready == 1)
-        {
-	        is_image_ready = 0;
-	        long width=0, height=0;
-	        VariantClear(&idata);
-            //--Ask for image data--//
-            long what = m_cam->_uViewCom->GetImageData(&idata, &width, &height, compression);
-            //--Ask for IvST values--//
-	        m_cam->getIvsROIValues();
-	        int arraySize = width * height * 2;
-	        //--Access to data with safe array--//
-	        BSTR HUGEP *pbstr;
-            SafeArrayAccessData(idata.parray, (void HUGEP**)&pbstr);
-            //--Prepare the Frame ptr--//
-            void *ptr = buffer_mgr.getFrameBufferPtr(frame_nb);
-            //--copy data into the Frame ptr--//
-            memcpy((unsigned short *)ptr, (unsigned short *)pbstr, arraySize); 
-	        //--Unlock the variant data--//
-            SafeArrayUnaccessData(idata.parray);
-	        //--destroy safe aray--//
-	        SafeArrayDestroy(idata.parray);
-            //--Set Time Stamp--//
-            buffer_mgr.setStartTimestamp(Timestamp::now());
-	        //-- NEW FRAME READY--//	
-            HwFrameInfoType frame_info;
-            frame_info.acq_frame_nb = acq_frame_nb;
-            buffer_mgr.newFrameReady(frame_info);
-	        //-- NEXT STEP --//
-            acq_frame_nb++;
-            nb_frames--;
-            m_cam->m_acq_frame_nb = acq_frame_nb;	
-        }
-
+		do
+		{
+			//do nothing while Acquisition in progress
+		}
+		while (m_cam->_uViewCom->GetAcquisitionInProgress());
+        std::cout<<"Image Received!"<<std::endl;
+        //is_image_ready = 0;
+        long width=0, height=0;
+        VariantClear(&idata);
+        //--Ask for image data--//
+        long what = m_cam->_uViewCom->GetImageData(&idata, &width, &height, compression);
+        //--Ask for IvST values--//
+        m_cam->getIvsROIValues();
+        int arraySize = width * height * 2;
+        //--Access to data with safe array--//
+        BSTR HUGEP *pbstr;
+        SafeArrayAccessData(idata.parray, (void HUGEP**)&pbstr);
+        //--Prepare the Frame ptr--//
+        void *ptr = buffer_mgr.getFrameBufferPtr(frame_nb);
+        //--copy data into the Frame ptr--//
+        memcpy((unsigned short *)ptr, (unsigned short *)pbstr, arraySize); 
+        //--Unlock the variant data--//
+        SafeArrayUnaccessData(idata.parray);
+        //--destroy safe aray--//
+        SafeArrayDestroy(idata.parray);
+        //--Set Time Stamp--//
+        buffer_mgr.setStartTimestamp(Timestamp::now());
+        //-- NEW FRAME READY--//	
+        HwFrameInfoType frame_info;
+        frame_info.acq_frame_nb = acq_frame_nb;
+        buffer_mgr.newFrameReady(frame_info);
+        //-- NEXT STEP --//
+        acq_frame_nb++;
+        nb_frames--;
+        m_cam->m_acq_frame_nb = acq_frame_nb;	
+      
         if (m_force_stop)
 			        goto ForceTheStop;
         	
@@ -204,6 +208,7 @@ Camera::Camera():
 	m_thread(*this)
 	
 {
+	std::cout<<"Camera::Create camera"<<std::endl;
     //--Initialize values--//
 	long *mode=0;
     long *trig=0;
@@ -215,23 +220,16 @@ Camera::Camera():
     long *vbin=0;
     long *expo=0;
 	this->m_Acq_running = false;
-	this-> m_camera_roi1Enable = false;
-	this-> m_camera_roi2Enable = false;
-	this-> m_camera_roi3Enable = false;
-	this-> m_camera_roi4Enable = false;
-	this-> m_camera_roi5Enable = false;
 	this-> m_ivs_roi_data_1 = 0.0;
 	this-> m_ivs_roi_data_2 = 0.0;
 	this-> m_ivs_roi_data_3 = 0.0;
 	this-> m_ivs_roi_data_4 = 0.0;
-	this-> m_ivs_roi_data_5 = 0.0;
 
     //--POINTER TO SEND/RECEIVE--//
 	this->_uViewCom = 0;
 	this->_uViewCom = new UviewSendReceive();
 
 	DEB_CONSTRUCTOR();
-	DEB_TRACE()<<"Camera::Camera";
     //--VARIANT VARIABLES INITIALIZATION--//
     VARIANT *manufacturer = new VARIANT;
     VariantInit(manufacturer);
@@ -259,12 +257,10 @@ Camera::Camera():
     VariantInit(maxWith);
     VARIANT *maxHeight = new VARIANT;
     VariantInit(maxHeight);
-
-	m_depth = 16;
-	
+	m_depth = 16;	
     
     /* Open comunication with the camera */
-    DEB_TRACE()<<"Open comunication with the camera.";
+    DEB_TRACE()<<"Open comunication with the camera...";
 	if (this->_uViewCom->initConnection() == 1)
 	{
         std::string Err = "Unable to open comunication with the camera.";
@@ -296,6 +292,8 @@ Camera::Camera():
 	    }
         /*default EXPOSURE unit is the microsec */
 	    this->_uViewCom->SetCameraExpTime(100);
+	    //  readout and  exposure  are done simultaneously
+	    this->_uViewCom->SetSequential(simultaneouslyMode);
         //--Ok to start thread camera--//
 	    m_thread.start();
     }
@@ -403,7 +401,6 @@ void Camera::stopAcq()
 void Camera::getExpTime(double& exp_time)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_TRACE()<<"Camera::getExpTime";	
 	
 	exp_time = this->_uViewCom->GetCameraExpTime();
 	DEB_RETURN() << DEB_VAR1(exp_time);
@@ -415,37 +412,38 @@ void Camera::getExpTime(double& exp_time)
 void Camera::setExpTime(double exp_time)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_TRACE()<<"Camera::setExpTime - "<<DEB_VAR1(exp_time);	
-
-	this->_uViewCom->SetCameraExpTime(exp_time);
-	m_exposure = exp_time;	
+	//We set the expeosure time if it has changed..
+	if ( m_exposure != exp_time)
+	{
+		float expTimeMs = exp_time*1000;	
+		this->_uViewCom->SetCameraExpTime(expTimeMs);
+		m_exposure = exp_time;	
+	}
 }
 //---------------------------------------------------------------------------------------
 //! Camera::getMaxWidth()
 //---------------------------------------------------------------------------------------
 int Camera::getMaxWidth()
-{DEB_MEMBER_FUNCT();
-	//--Set to 1024 max because real max size is not divisable by 32--//
-	//--> problem to set ROI then...//
-	m_max_width = 1024;
+{
+	DEB_MEMBER_FUNCT();
+	
 	return m_max_width;
 }	
 //---------------------------------------------------------------------------------------
 //! Camera::getMaxHeight()
 //---------------------------------------------------------------------------------------
 int Camera::getMaxHeight()
-{DEB_MEMBER_FUNCT();
-	//--Set to 1024 max because real max size is not divisable by 32--//
-	//--> problem to set ROI then...//
+{
+	DEB_MEMBER_FUNCT();
 
-	m_max_height = 1024;
 	return m_max_height;
 }
 //---------------------------------------------------------------------------------------
 //! Camera::getImageWidth()
 //---------------------------------------------------------------------------------------
 int Camera::getImageWidth()
-{DEB_MEMBER_FUNCT();
+{
+	DEB_MEMBER_FUNCT();
 
 	return m_width;
 }
@@ -453,7 +451,8 @@ int Camera::getImageWidth()
 //! Camera::getImageHeight()
 //---------------------------------------------------------------------------------------
 int Camera::getImageHeight()
-{DEB_MEMBER_FUNCT();
+{
+	DEB_MEMBER_FUNCT();
 	
 	return m_height;
 }	
@@ -462,7 +461,7 @@ int Camera::getImageHeight()
 //---------------------------------------------------------------------------------------
 void Camera::setImageType(ImageType type)
 {
-DEB_MEMBER_FUNCT();
+	DEB_MEMBER_FUNCT();
 
 	DEB_TRACE()<<"Camera::setImageType";
 	switch(type)
@@ -516,9 +515,13 @@ void Camera::setBin(const Bin& bin)
         //--Only 1x1, 2x2, 4x4, 8x8--//
         if (tmp_sbin == 1 || tmp_sbin == 2 || tmp_sbin == 4 || tmp_sbin ==8) 
         {
-            m_sbin = tmp_sbin;
-            m_pbin = tmp_pbin;
-	        this->setBinning(m_sbin, m_pbin);
+			//We set the bin if it has changed..
+			if ( m_sbin != tmp_sbin)
+			{
+				m_sbin = tmp_sbin;
+				m_pbin = tmp_pbin;
+				this->setBinning(m_sbin, m_pbin);
+			}
         }
         else
         {
@@ -588,7 +591,6 @@ void Camera::setRoi(const Roi& set_roi)
     //--Extract ROI values--//
 	short minX = minXmaxY.x;
 	short minY = maxXminY.y;
-
     //--Lima starts from 0, API doesn't...--//
     short width = maxXminY.x + 1;
     short height = minXmaxY.y + 1;
@@ -598,11 +600,14 @@ void Camera::setRoi(const Roi& set_roi)
     //--test_modulo_32 must be 0, means that height and width are divisable by 32--//
     if(test_modulo_32 == 0)
     {
-	    //--Ready to send ROI values---//
-	    m_roi = set_roi;
-        this->setCameraROI(minX, minY, width, height);
-	    //--refresh Image Size--//
-	    this->refreshImageSize();
+	    //--Ready to send ROI values if ROI changed---//
+		if (m_roi != set_roi)
+		{
+			m_roi = set_roi;
+			this->setCameraROI(minX, minY, width, height);
+			//--refresh Image Size--//
+			this->refreshImageSize();
+		}
     }
     else 
     {
@@ -620,31 +625,14 @@ void Camera::setRoi(const Roi& set_roi)
 void Camera::getIvsROIValues()
 {
 	DEB_MEMBER_FUNCT();
-	if (m_camera_roi1Enable)
-	{
-		m_ivs_roi_data_1 = this->getROIdata(ROIid1);
-		m_ivs_roi_data_1_enable = true;
-	}
-	if (m_camera_roi2Enable)
-	{
-		m_ivs_roi_data_2 = this->getROIdata(ROIid2);
-		m_ivs_roi_data_2_enable = true;
-	}
-	if (m_camera_roi3Enable)
-	{
-		m_ivs_roi_data_3 = this->getROIdata(ROIid3);
-		m_ivs_roi_data_3_enable = true;
-	}
-	if (m_camera_roi4Enable)
-	{
-		m_ivs_roi_data_4 = this->getROIdata(ROIid4);
-		m_ivs_roi_data_4_enable = true;
-	}
-	if (m_camera_roi5Enable)
-	{
-		m_ivs_roi_data_5 = this->getROIdata(ROIid5);
-		m_ivs_roi_data_5_enable = true;
-	}
+	//lima::MutexLock gard(this->_IvSRoIAccess);
+	m_ivs_roi_data_1 = this->getROIdata(ROIid1);
+	m_ivs_roi_data_2 = this->getROIdata(ROIid2);
+	m_ivs_roi_data_3 = this->getROIdata(ROIid3);
+	m_ivs_roi_data_4 = this->getROIdata(ROIid4);
+	//Data ready to be imported by uviewCCD
+	if (!this->_IvsTRoiReady)
+		this->_IvsTRoiReady = true;
 }
 
 //---------------------------------------------------------------------------------------
@@ -655,25 +643,39 @@ void Camera::getIvsROIValues()
 //---------------------------------------------------------------------------------------
 float Camera::checkIvsROIValues(short ROIid)
 {
+	//yat::MutexLock gard(this->_IvSRoIAccess);
 	switch(ROIid)
-		{
-			case 1 :
-				this->m_ivs_roi_data_1_enable = false;
-				return this->m_ivs_roi_data_1;
-			case 2 :
-				this->m_ivs_roi_data_1_enable = false;
-				return this->m_ivs_roi_data_2;
-			case 3 :
-				this->m_ivs_roi_data_1_enable = false;
-				return this->m_ivs_roi_data_3;
-			case 4 :
-				this->m_ivs_roi_data_1_enable = false;
-				return this->m_ivs_roi_data_4;
-			case 5 :
-				this->m_ivs_roi_data_1_enable = false;
-				return this->m_ivs_roi_data_5;
-			default :;
-		}	
+	{
+		case 1 :
+			return this->m_ivs_roi_data_1;
+		case 2 :
+			return this->m_ivs_roi_data_2;
+		case 3 :
+			return this->m_ivs_roi_data_3;
+		case 4 :
+			return this->m_ivs_roi_data_4;
+		default :;
+	}	
+}
+//---------------------------------------------------------------------------------------
+//! Camera::checkIvsROIValues()
+//
+//--Used by uviewCCD device to know when to get IvsT ROI values--//
+//--To return flag "data enable"--//
+//---------------------------------------------------------------------------------------
+bool Camera::IsIvSRoiDataReady()
+{
+	return this->_IvsTRoiReady;
+}
+//---------------------------------------------------------------------------------------
+//! Camera::checkIvsROIValues()
+//
+//--Used by uviewCCD device to know when to get IvsT ROI values--//
+//--To return flag "data enable"--//
+//---------------------------------------------------------------------------------------
+void Camera::IvSRoiDataImported()
+{
+	this->_IvsTRoiReady = false;
 }
 //---------------------------------------------------------------------------------------
 //! Camera::refreshImageSize()
@@ -684,24 +686,6 @@ void Camera::refreshImageSize()
     m_height = (int)this->_uViewCom->GetImageHeight();
 }
 //---------------------------------------------------------------------------------------
-//! Camera::initIvs()
-//---------------------------------------------------------------------------------------
-void Camera::initIvs()
-{DEB_MEMBER_FUNCT();
-	//--Never used--//
-    // Always return 1...
-    short response = this->_uViewCom->IvsTInitRemoteMeasurement();
-}
-//---------------------------------------------------------------------------------------
-//! Camera::IvsTStartStopAcq()
-//---------------------------------------------------------------------------------------
-void Camera::IvsTStartStopAcq(short value)
-{DEB_MEMBER_FUNCT();
-    //--Never used--//
-    // Always return 1...
-    short response = this->_uViewCom->IvsTStartAcquiring(value);
-}
-//---------------------------------------------------------------------------------------
 //! Camera::getROIdata(ROIid)
 //---------------------------------------------------------------------------------------
 float Camera::getROIdata(short ROIid)
@@ -710,42 +694,12 @@ float Camera::getROIdata(short ROIid)
     return response;
 }
 //---------------------------------------------------------------------------------------
-//! Camera::setIvsTROI()
-//---------------------------------------------------------------------------------------
-short Camera::setIvsTROI(short ROIid, unsigned long color, short x1, short 
-                        y1, short x2, short y2)
-{DEB_MEMBER_FUNCT();
-    
-    char interactive;
-    short response = this->_uViewCom->IvsTDefineROI(ROIid, color, x1, y1, x2, y2, interactive);
-
-	switch(ROIid)
-		{
-			case 1 : m_camera_roi1Enable = true;
-				 break;
-			case 2 : m_camera_roi2Enable = true;
-				 break;
-			case 3 : m_camera_roi3Enable = true;
-				 break;
-			case 4 : m_camera_roi4Enable = true;
-				 break;
-			case 5 : m_camera_roi5Enable = true;
-				 break;
-			default :;
-		}	
-
-    return response;
-}
-//---------------------------------------------------------------------------------------
 //! Camera::setCameraROI(short originX, short originY, short roiWidth, short roiHeight)
 //---------------------------------------------------------------------------------------
 void Camera::setCameraROI(short originX, short originY, short limit_x, short limit_y)
 {DEB_MEMBER_FUNCT();
 
-        this->_uViewCom->SetCameraROIxMin(originX);
-        this->_uViewCom->SetCameraROIyMin(originY);
-        this->_uViewCom->SetCameraROIxMax(limit_x);
-        this->_uViewCom->SetCameraROIyMax(limit_y);
+	this->_uViewCom->setCameraRoi(originX, originY, limit_x, limit_y);
 }
 //---------------------------------------------------------------------------------------
 //! Camera::setBinning(short hBin, short vBin)
@@ -753,8 +707,7 @@ void Camera::setCameraROI(short originX, short originY, short limit_x, short lim
 void Camera::setBinning(short sethBin, short setvBin)
 {DEB_MEMBER_FUNCT();
 
-        this->_uViewCom->SetCameraHBin(sethBin);
-        this->_uViewCom->SetCameraVBin(setvBin);        
+	this->_uViewCom->setCameraBin(sethBin, setvBin);
 }
 //---------------------------------------------------------------------------------------
 //! Camera::getCameraROI(short originX, short originY, short roiWidth, short roiHeight)
@@ -768,7 +721,7 @@ void Camera::getCameraROI(short xMin, short yMin, short xMax, short yMax)
         yMax = this->_uViewCom->GetCameraROIyMax();
 }
 //---------------------------------------------------------------------------------------
-//! Camera::getCameraROI(short hBin, short vBin)
+//! Camera::getBinning(short hBin, short vBin)
 //---------------------------------------------------------------------------------------
 void Camera::getBinning(short hBin, short vBin)
 {DEB_MEMBER_FUNCT();

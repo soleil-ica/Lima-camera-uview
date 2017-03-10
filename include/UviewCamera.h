@@ -101,13 +101,9 @@ public:
     void getCameraROI(short originX, short originY, short roiWidth, short roiHeight);
     void getBinning(short hBin, short vBin);
 	
-    //IvsT specifique 
-	void initIvs();
-    void IvsTStartStopAcq(short value);
+    //IvsT specifique   
     float getROIdata(short ROIid);
-    short setIvsTROI(short ROIid, unsigned long color, short x1, short 
-                        y1, short x2, short y2);
-
+   
 	bool m_Acq_running;
 	bool m_ivs_roi_data_1_enable;
 	bool m_ivs_roi_data_2_enable;
@@ -116,8 +112,11 @@ public:
 	bool m_ivs_roi_data_5_enable;
 
 	float checkIvsROIValues(short ROIid);
+	void IvSRoiDataImported();
+	bool IsIvSRoiDataReady();
     
 private:
+/////////////////////////////////////////////////////////////////
 	class CameraThread: public CmdThread
 	{
 	    DEB_CLASS_NAMESPC(DebModCamera, "CameraThread", "Uview");
@@ -145,9 +144,9 @@ private:
 		void execStartAcq();
 	private:
 		Camera* m_cam;
-        
+  };
+/////////////////////////////////////////////////////////////////
 
-	};
 	friend class CameraThread;
 
 	/* Lima buffer control object */
@@ -180,26 +179,18 @@ private:
 	unsigned short *m_pr_buffer;
 
 	//--Private IVS Specific--//
+	//lima::Mutex _IvSRoIAccess;
 	void getIvsROIValues();
 
 	float m_ivs_roi_data_1;
 	float m_ivs_roi_data_2;
 	float m_ivs_roi_data_3;
 	float m_ivs_roi_data_4;
-	float m_ivs_roi_data_5;
-
-	bool m_camera_roi1Enable;
-	bool m_camera_roi2Enable;
-	bool m_camera_roi3Enable;
-	bool m_camera_roi4Enable;
-	bool m_camera_roi5Enable;
-
-
-
 
 	/* main acquisition thread*/
 	CameraThread 	m_thread;
 	int 			m_acq_frame_nb;
+	bool	_IvsTRoiReady;
 
 	Roi m_roi;
 
