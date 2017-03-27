@@ -140,8 +140,6 @@ private :
     
     std::string UviewErrorString(short response);
 
-	IUViewInt *IUView;
-
     bool _error;
 };
 }

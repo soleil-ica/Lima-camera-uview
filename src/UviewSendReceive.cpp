@@ -27,7 +27,6 @@ using namespace lima::Uview;
 
 //- CTOR
 UviewSendReceive::UviewSendReceive()
-: IUView(0)
 {
 
 }
