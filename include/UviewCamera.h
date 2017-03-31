@@ -49,26 +49,26 @@ public:
 	Camera();
 	~Camera();
 
-    void getExpTime(double& exp_time);
-    void setExpTime(double  exp_time);
+  void getExpTime(double& exp_time);
+  void setExpTime(double  exp_time);
 
-	Status getStatus();
-	int getNbAcquiredFrames();
-	    
-    void startAcq();
-	void stopAcq();
-	void prepareAcq();
+  Status getStatus();
+  int getNbAcquiredFrames();
 
-    void reset();
+  void startAcq();
+  void stopAcq();
+  void prepareAcq();
+
+  void reset();
 
 
-	void setNbFrames(int nb_frames);
-	void getNbFrames(int& nb_frames);
+  void setNbFrames(int nb_frames);
+  void getNbFrames(int& nb_frames);
 
-	HwBufferCtrlObj* getBufferCtrlObj() { return &m_buffer_ctrl_obj; };
+  HwBufferCtrlObj* getBufferCtrlObj() { return &m_buffer_ctrl_obj; };
 
-	void setImageType(ImageType type);
-    void getImageType(ImageType& type);
+  void setImageType(ImageType type);
+  void getImageType(ImageType& type);
 
 	void getDetectorModel(std::string& model);
 
@@ -86,23 +86,23 @@ public:
 	void getBin(Bin& bin);
 	void checkBin(Bin& bin);
 
-    void checkRoi(const Roi& set_roi, Roi& hw_roi);
-    void setRoi(const Roi& set_roi);
-    void getRoi(Roi& hw_roi);   
+  void checkRoi(const Roi& set_roi, Roi& hw_roi);
+  void setRoi(const Roi& set_roi);
+  void getRoi(Roi& hw_roi);   
 
-    std::string UviewErrorString(short response);
+  std::string UviewErrorString(short response);
 
-    UviewSendReceive * _uViewCom;
+  UviewSendReceive * m_uview_com;
 
-    void setAverage(long value);
-	 	   
-	void setCameraROI(short originX, short originY, short roiWidth, short roiHeight);
-    void setBinning(short hBin, short vBin);
-    void getCameraROI(short originX, short originY, short roiWidth, short roiHeight);
-    void getBinning(short hBin, short vBin);
-	
-    //IvsT specifique   
-    float getROIdata(short ROIid);
+  void setAverage(long value);
+
+  void setCameraROI(short originX, short originY, short roiWidth, short roiHeight);
+  void setBinning(short hBin, short vBin);
+  void getCameraROI(short originX, short originY, short roiWidth, short roiHeight);
+  void getBinning(short hBin, short vBin);
+
+  //IvsT specifique   
+  float getROIdata(short ROIid);
    
 	bool m_Acq_running;
 	bool m_ivs_roi_data_1_enable;
@@ -116,7 +116,6 @@ public:
 	bool IsIvSRoiDataReady();
     
 private:
-/////////////////////////////////////////////////////////////////
 	class CameraThread: public CmdThread
 	{
 	    DEB_CLASS_NAMESPC(DebModCamera, "CameraThread", "Uview");
@@ -145,7 +144,6 @@ private:
 	private:
 		Camera* m_cam;
   };
-/////////////////////////////////////////////////////////////////
 
 	friend class CameraThread;
 
@@ -162,8 +160,7 @@ private:
 	char m_error_msg[200];
 	int m_error_code;
 	int m_nb_frames;
-
-    int m_size;
+  int m_size;
 
 	int m_int_acq_mode;	
 
@@ -189,12 +186,10 @@ private:
 
 	/* main acquisition thread*/
 	CameraThread 	m_thread;
-	int 			m_acq_frame_nb;
-	bool	_IvsTRoiReady;
+	int 	m_acq_frame_nb;
+	bool	m_ivst_roi_ready;
 
 	Roi m_roi;
-
-
 };
 }
 }
