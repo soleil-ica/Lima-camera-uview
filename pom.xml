@@ -9,7 +9,7 @@
 
     <groupId>fr.soleil.lib.Lima.Camera</groupId>
     <artifactId>LimaUview-${aol}-shared-${mode}</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
 
     <packaging>nar</packaging>
     <name>LimaUview</name>
