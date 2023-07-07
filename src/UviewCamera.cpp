@@ -41,7 +41,7 @@ const bool simultaneouslyMode = true;
 //! Camera::CameraThread::CameraThread()
 //---------------------------------------------------------------------------------------
 Camera::CameraThread::CameraThread(Camera& cam)
-		: m_cam(&cam)
+: m_cam(&cam)
 {
 	DEB_MEMBER_FUNCT();	
 	DEB_TRACE()<<"CameraThread::CameraThread - BEGIN";	
@@ -57,9 +57,7 @@ void Camera::CameraThread::start()
 {
 	DEB_MEMBER_FUNCT();	
 	DEB_TRACE()<<"CameraThread::start - BEGIN";	
-
 	CmdThread::start();
-	
 	waitStatus(Ready);
 	DEB_TRACE()<<"CameraThread::start - END";		
 }
@@ -78,7 +76,8 @@ void Camera::CameraThread::init()
 //! Camera::prepareAcq()
 //---------------------------------------------------------------------------------------
 void Camera::prepareAcq()
-{DEB_MEMBER_FUNCT();	
+{
+	DEB_MEMBER_FUNCT();	
 	DEB_TRACE()<<"CameraThread::prepareAcq";
 }
 
@@ -209,23 +208,23 @@ Camera::Camera():
 {
     //--Initialize values--//
 	long *mode=0;
-  long *trig=0;
-  long *roixmin=0;
-  long *roixmax=0;
-  long *roiymin=0;
-  long *roiymax=0;
-  long *hbin=0;
-  long *vbin=0;
-  long *expo=0;
-	this->m_Acq_running = false;
-	this-> m_ivs_roi_data_1 = 0.0;
-	this-> m_ivs_roi_data_2 = 0.0;
-	this-> m_ivs_roi_data_3 = 0.0;
-	this-> m_ivs_roi_data_4 = 0.0;
+	long *trig=0;
+	long *roixmin=0;
+	long *roixmax=0;
+	long *roiymin=0;
+	long *roiymax=0;
+	long *hbin=0;
+	long *vbin=0;
+	long *expo=0;
+	m_Acq_running = false;
+	m_ivs_roi_data_1 = 0.0;
+	m_ivs_roi_data_2 = 0.0;
+	m_ivs_roi_data_3 = 0.0;
+	m_ivs_roi_data_4 = 0.0;
 
   //--POINTER TO SEND/RECEIVE--//
-	this->m_uview_com = 0;
-	this->m_uview_com = new UviewSendReceive();
+	m_uview_com = 0;
+	m_uview_com = new UviewSendReceive();
 
 	DEB_CONSTRUCTOR();
     //--VARIANT VARIABLES INITIALIZATION--//
@@ -259,7 +258,7 @@ Camera::Camera():
     
     /* Open comunication with the camera */
     DEB_TRACE()<<"Open comunication with the camera...";
-	if (this->m_uview_com->initConnection() == 1)
+	if (m_uview_com->initConnection() == 1)
 	{
         std::string Err = "Unable to open comunication with the camera.";
 		THROW_HW_ERROR(Error) << Err;
@@ -267,13 +266,13 @@ Camera::Camera():
     else
     {
         //-- GET INFORMATIONS--//
-        short response = this->m_uview_com->GetCameraInfoLong(manufacturer, camtype, CCDsize, maxWith, maxHeight, 
+        short response = m_uview_com->GetCameraInfoLong(manufacturer, camtype, CCDsize, maxWith, maxHeight, 
                                                             maxHBin, maxVBin, maxGain, 
                                                             maxBrightness, maxContrast, eletemp, 
                                                             ccdtemp, maxExpTimeMSEC);
 
 	    //--Set image size--//
-    	this->refreshImageSize();
+    	refreshImageSize();
 
 	    //-- Set max image size --//
         VARIANT mW = *maxWith;
@@ -289,9 +288,9 @@ Camera::Camera():
 		    THROW_HW_ERROR(Error) << Err;
 	    }
         /*default EXPOSURE unit is the microsec */
-	    this->m_uview_com->SetCameraExpTime(100);
+	    m_uview_com->SetCameraExpTime(100);
 	    //  readout and  exposure  are done simultaneously
-	    this->m_uview_com->SetSequential(simultaneouslyMode);
+	    m_uview_com->SetSequential(simultaneouslyMode);
         //--Ok to start thread camera--//
 	    m_thread.start();
     }
@@ -301,8 +300,8 @@ Camera::Camera():
 //! Camera::~Camera()
 //---------------------------------------------------------------------------------------
 Camera::~Camera()
-{DEB_DESTRUCTOR();
-	
+{
+	DEB_DESTRUCTOR();
     stopAcq();
 }
 //---------------------------------------------------------------------------------------
@@ -319,8 +318,8 @@ void Camera::reset()
 //! Camera::getStatus()
 //---------------------------------------------------------------------------------------
 Camera::Status Camera::getStatus()
-{DEB_MEMBER_FUNCT();
-
+{
+	DEB_MEMBER_FUNCT();
 	int thread_status = m_thread.getStatus();
 
 	DEB_RETURN() << DEB_VAR1(thread_status);
@@ -344,10 +343,12 @@ Camera::Status Camera::getStatus()
 //! Camera::setNbFrames()
 //---------------------------------------------------------------------------------------
 void Camera::setNbFrames(int nb_frames)
-{DEB_MEMBER_FUNCT();
-	
+{
+	DEB_MEMBER_FUNCT();
 	if (nb_frames < 0)
+	{
 		throw LIMA_HW_EXC(InvalidValue, "Invalid nb of frames");
+	}
 
 	m_nb_frames = nb_frames;
 }
@@ -356,8 +357,8 @@ void Camera::setNbFrames(int nb_frames)
 //! Camera::getNbFrames()
 //---------------------------------------------------------------------------------------
 void Camera::getNbFrames(int& nb_frames)
-{DEB_MEMBER_FUNCT();
-
+{
+	DEB_MEMBER_FUNCT();
 	nb_frames = m_nb_frames;
 }
 
@@ -365,8 +366,8 @@ void Camera::getNbFrames(int& nb_frames)
 //! Camera::CameraThread::getNbAcquiredFrames()
 //---------------------------------------------------------------------------------------
 int Camera::getNbAcquiredFrames()
-{DEB_MEMBER_FUNCT();
-
+{
+	DEB_MEMBER_FUNCT();
 	return m_acq_frame_nb;
 }
 
@@ -374,8 +375,8 @@ int Camera::getNbAcquiredFrames()
 //! Camera::startAcq()
 //---------------------------------------------------------------------------------------
 void Camera::startAcq()
-{DEB_MEMBER_FUNCT();
-
+{
+	DEB_MEMBER_FUNCT();
 	m_thread.m_force_stop = false;
 	m_acq_frame_nb = 0;
 
@@ -387,9 +388,9 @@ void Camera::startAcq()
 //! Camera::stopAcq()
 //---------------------------------------------------------------------------------------
 void Camera::stopAcq()
-{DEB_MEMBER_FUNCT();
-
-    this->m_Acq_running = false;
+{
+	DEB_MEMBER_FUNCT();
+    m_Acq_running = false;
 	m_thread.m_force_stop = true;
 }
 
@@ -399,8 +400,7 @@ void Camera::stopAcq()
 void Camera::getExpTime(double& exp_time)
 {
 	DEB_MEMBER_FUNCT();
-	
-	exp_time = this->m_uview_com->GetCameraExpTime();
+	exp_time = m_uview_com->GetCameraExpTime();
 	DEB_RETURN() << DEB_VAR1(exp_time);
 }
 
@@ -414,7 +414,7 @@ void Camera::setExpTime(double exp_time)
 	if ( m_exposure != exp_time)
 	{
 		float expTimeMs = exp_time*1000;	
-		this->m_uview_com->SetCameraExpTime(expTimeMs);
+		m_uview_com->SetCameraExpTime(expTimeMs);
 		m_exposure = exp_time;	
 	}
 }
@@ -424,7 +424,6 @@ void Camera::setExpTime(double exp_time)
 int Camera::getMaxWidth()
 {
 	DEB_MEMBER_FUNCT();
-	
 	return m_max_width;
 }	
 //---------------------------------------------------------------------------------------
@@ -433,7 +432,6 @@ int Camera::getMaxWidth()
 int Camera::getMaxHeight()
 {
 	DEB_MEMBER_FUNCT();
-
 	return m_max_height;
 }
 //---------------------------------------------------------------------------------------
@@ -442,7 +440,6 @@ int Camera::getMaxHeight()
 int Camera::getImageWidth()
 {
 	DEB_MEMBER_FUNCT();
-
 	return m_width;
 }
 //---------------------------------------------------------------------------------------
@@ -451,7 +448,6 @@ int Camera::getImageWidth()
 int Camera::getImageHeight()
 {
 	DEB_MEMBER_FUNCT();
-	
 	return m_height;
 }	
 //---------------------------------------------------------------------------------------
@@ -460,7 +456,6 @@ int Camera::getImageHeight()
 void Camera::setImageType(ImageType type)
 {
 	DEB_MEMBER_FUNCT();
-
 	DEB_TRACE()<<"Camera::setImageType";
 	switch(type)
 	{
@@ -477,7 +472,6 @@ void Camera::setImageType(ImageType type)
 //---------------------------------------------------------------------------------------
 void Camera::getImageType(ImageType& type)
 {
-
 	DEB_MEMBER_FUNCT();	
 	switch(m_depth)
 	{
@@ -494,16 +488,15 @@ void Camera::getImageType(ImageType& type)
 //---------------------------------------------------------------------------------------
 void Camera::getDetectorModel(std::string& model)
 {
-DEB_MEMBER_FUNCT();
-
-model = "PCO" ;
-
+	DEB_MEMBER_FUNCT();
+	model = "PCO" ;
 }
 //---------------------------------------------------------------------------------------
 //! Camera::setBin()
 //---------------------------------------------------------------------------------------
 void Camera::setBin(const Bin& bin)
-{DEB_MEMBER_FUNCT();
+{
+	DEB_MEMBER_FUNCT();
 	
 	unsigned short tmp_sbin = bin.getX();
 	unsigned short tmp_pbin = bin.getY();
@@ -518,7 +511,7 @@ void Camera::setBin(const Bin& bin)
 			{
 				m_sbin = tmp_sbin;
 				m_pbin = tmp_pbin;
-				this->setBinning(m_sbin, m_pbin);
+				setBinning(m_sbin, m_pbin);
 			}
         }
         else
@@ -538,7 +531,8 @@ void Camera::setBin(const Bin& bin)
 //! Camera::getBin()
 //---------------------------------------------------------------------------------------
 void Camera::getBin(Bin& bin)
-{DEB_MEMBER_FUNCT();
+{
+	DEB_MEMBER_FUNCT();
 	Bin tmp_bin(m_sbin, m_pbin);
 	bin = tmp_bin;
 	DEB_RETURN() << DEB_VAR1(bin);	
@@ -548,7 +542,8 @@ void Camera::getBin(Bin& bin)
 //! Camera::checkBin()
 //---------------------------------------------------------------------------------------
 void Camera::checkBin(Bin& aBin)
-{DEB_MEMBER_FUNCT();
+{
+	DEB_MEMBER_FUNCT();
 	/*Bin tmp_bin(m_roi_sbin, m_roi_pbin);
 	aBin = tmp_bin;*/
 
@@ -560,7 +555,8 @@ void Camera::checkBin(Bin& aBin)
 //! Camera::checkRoi()
 //-----------------------------------------------------
 void Camera::checkRoi(const Roi& set_roi, Roi& hw_roi)
-{DEB_MEMBER_FUNCT();	
+{
+	DEB_MEMBER_FUNCT();	
     DEB_PARAM() << DEB_VAR1(set_roi);
 
 	hw_roi = set_roi;
@@ -571,7 +567,8 @@ void Camera::checkRoi(const Roi& set_roi, Roi& hw_roi)
 //! Camera::getRoi()
 //---------------------------------------------------------------------------------------
 void Camera::getRoi(Roi& hw_roi)
-{DEB_MEMBER_FUNCT();
+{
+	DEB_MEMBER_FUNCT();
 	//--no way to read the roi, Uview does not provide any function to do that!--//
     hw_roi = m_roi;
 	DEB_RETURN() << DEB_VAR1(hw_roi);
@@ -581,8 +578,8 @@ void Camera::getRoi(Roi& hw_roi)
 //! Camera::setRoi()
 //---------------------------------------------------------------------------------------
 void Camera::setRoi(const Roi& set_roi)
-{DEB_MEMBER_FUNCT();
-
+{
+	DEB_MEMBER_FUNCT();
     //--Get ROI values : x, y, width, height--//
 	Point minXmaxY = set_roi.getBottomLeft();
 	Point maxXminY = set_roi.getTopRight();
@@ -602,9 +599,9 @@ void Camera::setRoi(const Roi& set_roi)
 		if (m_roi != set_roi)
 		{
 			m_roi = set_roi;
-			this->setCameraROI(minX, minY, width, height);
+			setCameraROI(minX, minY, width, height);
 			//--refresh Image Size--//
-			this->refreshImageSize();
+			refreshImageSize();
 		}
     }
     else 
@@ -623,14 +620,16 @@ void Camera::setRoi(const Roi& set_roi)
 void Camera::getIvsROIValues()
 {
 	DEB_MEMBER_FUNCT();
-	//lima::MutexLock gard(this->_IvSRoIAccess);
-	m_ivs_roi_data_1 = this->getROIdata(ROIid1);
-	m_ivs_roi_data_2 = this->getROIdata(ROIid2);
-	m_ivs_roi_data_3 = this->getROIdata(ROIid3);
-	m_ivs_roi_data_4 = this->getROIdata(ROIid4);
+	//lima::MutexLock gard(_IvSRoIAccess);
+	m_ivs_roi_data_1 = getROIdata(ROIid1);
+	m_ivs_roi_data_2 = getROIdata(ROIid2);
+	m_ivs_roi_data_3 = getROIdata(ROIid3);
+	m_ivs_roi_data_4 = getROIdata(ROIid4);
 	//Data ready to be imported by uviewCCD
-	if (!this->m_ivst_roi_ready)
-		this->m_ivst_roi_ready = true;
+	if (!m_ivst_roi_ready)
+	{
+		m_ivst_roi_ready = true;
+	}
 }
 
 //---------------------------------------------------------------------------------------
@@ -641,17 +640,17 @@ void Camera::getIvsROIValues()
 //---------------------------------------------------------------------------------------
 float Camera::checkIvsROIValues(short ROIid)
 {
-	//yat::MutexLock gard(this->_IvSRoIAccess);
+	//yat::MutexLock gard(_IvSRoIAccess);
 	switch(ROIid)
 	{
 		case 1 :
-			return this->m_ivs_roi_data_1;
+			return m_ivs_roi_data_1;
 		case 2 :
-			return this->m_ivs_roi_data_2;
+			return m_ivs_roi_data_2;
 		case 3 :
-			return this->m_ivs_roi_data_3;
+			return m_ivs_roi_data_3;
 		case 4 :
-			return this->m_ivs_roi_data_4;
+			return m_ivs_roi_data_4;
 		default :;
 	}	
 }
@@ -663,7 +662,7 @@ float Camera::checkIvsROIValues(short ROIid)
 //---------------------------------------------------------------------------------------
 bool Camera::IsIvSRoiDataReady()
 {
-	return this->m_ivst_roi_ready;
+	return m_ivst_roi_ready;
 }
 //---------------------------------------------------------------------------------------
 //! Camera::checkIvsROIValues()
@@ -673,66 +672,68 @@ bool Camera::IsIvSRoiDataReady()
 //---------------------------------------------------------------------------------------
 void Camera::IvSRoiDataImported()
 {
-	this->m_ivst_roi_ready = false;
+	m_ivst_roi_ready = false;
 }
 //---------------------------------------------------------------------------------------
 //! Camera::refreshImageSize()
 //---------------------------------------------------------------------------------------
 void Camera::refreshImageSize()
 {
-    m_width = (int)this->m_uview_com->GetImageWidth();
-    m_height = (int)this->m_uview_com->GetImageHeight();
+    m_width = (int)m_uview_com->GetImageWidth();
+    m_height = (int)m_uview_com->GetImageHeight();
 }
 //---------------------------------------------------------------------------------------
 //! Camera::getROIdata(ROIid)
 //---------------------------------------------------------------------------------------
 float Camera::getROIdata(short ROIid)
-{DEB_MEMBER_FUNCT();
-    float response = this->m_uview_com->ROIdata(ROIid);
+{
+	DEB_MEMBER_FUNCT();
+    float response = m_uview_com->ROIdata(ROIid);
     return response;
 }
 //---------------------------------------------------------------------------------------
 //! Camera::setCameraROI(short originX, short originY, short roiWidth, short roiHeight)
 //---------------------------------------------------------------------------------------
 void Camera::setCameraROI(short originX, short originY, short limit_x, short limit_y)
-{DEB_MEMBER_FUNCT();
-
-	this->m_uview_com->setCameraRoi(originX, originY, limit_x, limit_y);
+{
+	DEB_MEMBER_FUNCT();
+	m_uview_com->setCameraRoi(originX, originY, limit_x, limit_y);
 }
 //---------------------------------------------------------------------------------------
 //! Camera::setBinning(short hBin, short vBin)
 //---------------------------------------------------------------------------------------
 void Camera::setBinning(short sethBin, short setvBin)
-{DEB_MEMBER_FUNCT();
-
-	this->m_uview_com->setCameraBin(sethBin, setvBin);
+{
+	DEB_MEMBER_FUNCT();
+	m_uview_com->setCameraBin(sethBin, setvBin);
 }
 //---------------------------------------------------------------------------------------
 //! Camera::getCameraROI(short originX, short originY, short roiWidth, short roiHeight)
 //---------------------------------------------------------------------------------------
 void Camera::getCameraROI(short xMin, short yMin, short xMax, short yMax)
-{DEB_MEMBER_FUNCT();
-
-        xMin = this->m_uview_com->GetCameraROIxMin();
-        yMin = this->m_uview_com->GetCameraROIyMin();
-        xMax = this->m_uview_com->GetCameraROIxMax();
-        yMax = this->m_uview_com->GetCameraROIyMax();
+{
+	DEB_MEMBER_FUNCT();
+	xMin = m_uview_com->GetCameraROIxMin();
+	yMin = m_uview_com->GetCameraROIyMin();
+	xMax = m_uview_com->GetCameraROIxMax();
+	yMax = m_uview_com->GetCameraROIyMax();
 }
 //---------------------------------------------------------------------------------------
 //! Camera::getBinning(short hBin, short vBin)
 //---------------------------------------------------------------------------------------
 void Camera::getBinning(short hBin, short vBin)
-{DEB_MEMBER_FUNCT();
-
-        hBin = this->m_uview_com->GetCameraVBin();
-        vBin = this->m_uview_com->GetCameraVBin();        
+{
+	DEB_MEMBER_FUNCT();
+	hBin = m_uview_com->GetCameraVBin();
+	vBin = m_uview_com->GetCameraVBin();        
 }
 //---------------------------------------------------------------------------------------
 //! Camera::setAverage(long mode, long value)
 //---------------------------------------------------------------------------------------
 void Camera::setAverage(long value)
-{DEB_MEMBER_FUNCT();
-    this->m_uview_com->SetAverageImages(value);
+{
+	DEB_MEMBER_FUNCT();
+    m_uview_com->SetAverageImages(value);
 }
 //---------------------------------------------------------------------------------------
 //! Camera::UviewErrorString(short response)
@@ -742,77 +743,77 @@ std::string Camera::UviewErrorString(short response)
     std::string error ="";
     
 	switch(response)
-		{
-		case 0 : error = "No error from board";
-			break;
-		case 1 : error = "initialization failed; no camera connected";
-			break;
-		case 2 : error = "timeout in any function";
-			break;
-		case 3 : error = "function call with wrong parameter";
-			break;
-		case 4 : error = "cannot locate PCI card or card driver";
-			break;
-		case 5 : error = "cannot allocate DMA buffer";
-			break;
-		case 6 : error = "reserved";
-			break;
-		case 7 : error = "DMA timeout";
-			break;
-        case 8 : error = "invalid camera mode";
-			break;
-		case 9 : error = "no driver installed";
-			break;
-		case 10 : error = "no PCI bios found";
-			break;
-		case 11 : error = "device is hold by another process";
-			break;
-		case 12: error = "error in reading or writing data to board";
-			break;
-		case 13: error = "wrong driver function";
-			break;
-		case 14 : error = "reserved";
-			break;
-		case 15 : error = "reserved";
-			break;
-        case 16 : error = "reserved";
-			break;
-		case 17 : error = "reserved";
-			break;
-		case 18 : error = "reserved";
-			break;
-		case 19 : error = "reserved";
-			break;
-		case 20 : error = "LOAD_COC error (camera runs program memory)";
-			break;
-		case 21 : error = "too many values in COC";
-			break;
-		case 22 : error = "CCD temperature or electronics temperature out of range";
-			break;
-		case 23 : error = "buffer allocate error";
-			break;
-        case 24 : error = "READ_IMAGE error";
-			break;
-		case 25 : error = "set/reset buffer flags is failed";
-			break;
-		case 26 : error = "buffer is used";
-			break;
-        case 27 : error = "call to a windows function is failed";
-			break;
-		case 28 : error = "DMA error";
-			break;
-		case 29 : error = "cannot open file";
-			break;
-		case 30 : error = "registry error";
-			break;
-		case 31 : error = "open dialog error";
-			break;
-		case 32 : error = "needs newer called vxd or dll";
-			break;
+	{
+	case 0 : error = "No error from board";
+		break;
+	case 1 : error = "initialization failed; no camera connected";
+		break;
+	case 2 : error = "timeout in any function";
+		break;
+	case 3 : error = "function call with wrong parameter";
+		break;
+	case 4 : error = "cannot locate PCI card or card driver";
+		break;
+	case 5 : error = "cannot allocate DMA buffer";
+		break;
+	case 6 : error = "reserved";
+		break;
+	case 7 : error = "DMA timeout";
+		break;
+	case 8 : error = "invalid camera mode";
+		break;
+	case 9 : error = "no driver installed";
+		break;
+	case 10 : error = "no PCI bios found";
+		break;
+	case 11 : error = "device is hold by another process";
+		break;
+	case 12: error = "error in reading or writing data to board";
+		break;
+	case 13: error = "wrong driver function";
+		break;
+	case 14 : error = "reserved";
+		break;
+	case 15 : error = "reserved";
+		break;
+	case 16 : error = "reserved";
+		break;
+	case 17 : error = "reserved";
+		break;
+	case 18 : error = "reserved";
+		break;
+	case 19 : error = "reserved";
+		break;
+	case 20 : error = "LOAD_COC error (camera runs program memory)";
+		break;
+	case 21 : error = "too many values in COC";
+		break;
+	case 22 : error = "CCD temperature or electronics temperature out of range";
+		break;
+	case 23 : error = "buffer allocate error";
+		break;
+	case 24 : error = "READ_IMAGE error";
+		break;
+	case 25 : error = "set/reset buffer flags is failed";
+		break;
+	case 26 : error = "buffer is used";
+		break;
+	case 27 : error = "call to a windows function is failed";
+		break;
+	case 28 : error = "DMA error";
+		break;
+	case 29 : error = "cannot open file";
+		break;
+	case 30 : error = "registry error";
+		break;
+	case 31 : error = "open dialog error";
+		break;
+	case 32 : error = "needs newer called vxd or dll";
+		break;
 
-		default : error = "Unknown error";
-			return error;
-		}	
+	default : error = "Unknown error";
+		return error;
+	}	
 }
 
 
